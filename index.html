@@ -1,0 +1,802 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomiboings CHINITOS</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI',sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(135deg,#d60000,#a80000);
+            display: block; /* 🔥 cambio clave */
+
+            min-height: 100vh;
+            padding: 15px;
+            /* FIX iPhone */
+            background-attachment: fixed;
+        }
+
+        .app {
+            margin: auto;
+            margin-top: 20px;
+        }
+
+        /* BOINGS */
+
+        .boing-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .boing {
+            position: absolute;
+            width: clamp(55px, 12vw, 85px);
+            opacity: 0.8;
+            animation: move 22s linear infinite;
+            will-change: transform;
+            filter: drop-shadow(0 6px 10px rgba(0,0,0,0.4));
+        }
+
+        @keyframes move {
+            0% {
+                transform: translate3d(0,0,0);
+            }
+
+            100% {
+                transform: translate3d(120vw,0,0);
+            }
+        }
+
+        /* TARJETA */
+
+        .app {
+            background: white;
+            width: 100%;
+            max-width: 380px;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 2;
+            margin: auto;
+        }
+
+        /* 📱 CELULARES */
+        @media (max-width: 480px) {
+            .app {
+                max-width: 100%;
+                padding: 18px;
+                border-radius: 18px;
+            }
+        }
+
+        /* 📲 TABLETS */
+        @media (min-width: 481px) and (max-width: 900px) {
+            .app {
+                max-width: 420px;
+            }
+        }
+
+        /* 💻 COMPUTADORAS */
+        @media (min-width: 901px) {
+            .app {
+                max-width: 420px;
+            }
+        }
+
+        /* BOTONES */
+
+        .top-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .circle-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#ff2b2b,#a80000);
+            color: white;
+            border: none;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+            .circle-btn:hover {
+                transform: scale(1.1);
+            }
+
+            .circle-btn:active {
+                transform: scale(0.9);
+            }
+
+        /* LOGO */
+
+        .logo {
+            display: block;
+            margin: auto;
+            width: 110px;
+        }
+
+        /* CAMPOS */
+
+        label {
+            margin-top: 10px;
+            display: block;
+            font-size: 13px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            margin-top: 5px;
+            font-size: 16px;
+        }
+
+        /* TEXTO */
+
+        .total {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #c40000;
+        }
+
+        /* BOTON */
+
+        .main {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 12px;
+            background: #d60000;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* MODALES */
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 350px;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+        }
+
+        /* SPLASH */
+
+        .splash {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%) scale(0.5);
+            background: #ff0000;
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            opacity: 0;
+            z-index: 999;
+        }
+
+            .splash.show {
+                animation: splash 0.6s forwards;
+            }
+
+        @keyframes splash {
+            0% {
+                transform: translate(-50%,-50%) scale(0.5);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translate(-50%,-50%) scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%,-50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* MODAL PRO */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+            .modal.active {
+                display: flex;
+            }
+
+        .modal-box {
+            background: #fff;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            animation: aparecer 0.3s ease;
+        }
+
+        @keyframes aparecer {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* HEADER */
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .close-btn {
+            background: #eee;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* BOTON BORRAR */
+
+        .delete-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #ff3b3b;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* LISTA */
+
+        .lista {
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .cerrar-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg,#111,#333);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            transition: 0.25s;
+        }
+
+            /* HOVER */
+
+            .cerrar-btn:hover {
+                transform: translateY(-2px) scale(1.02);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            }
+
+            /* CLICK */
+
+            .cerrar-btn:active {
+                transform: scale(0.95);
+            }
+
+        .cerrar-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg,#111,#333);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            transition: 0.25s;
+        }
+
+            /* HOVER */
+
+            .cerrar-btn:hover {
+                transform: translateY(-2px) scale(1.02);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            }
+
+            /* CLICK */
+
+            .cerrar-btn:active {
+                transform: scale(0.95);
+            }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 5px solid #eee;
+            border-top: 5px solid #ff0000;
+            border-radius: 50%;
+            animation: girar 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes girar {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        * {
+            -webkit-font-smoothing: antialiased;
+            -webkit-transform: translateZ(0);
+        }
+
+        /* SUAVIDAD EN CELULAR */
+        * {
+            -webkit-font-smoothing: antialiased;
+            -webkit-transform: translateZ(0);
+        }
+
+        /* BOTONES MÁS GRANDES EN CELULAR */
+        @media (max-width: 480px) {
+            .cerrar-btn {
+                padding: 16px;
+                font-size: 16px;
+            }
+
+            .circle-btn {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
+        /* MODALES RESPONSIVOS */
+        .modal-box {
+            width: 90%;
+            max-width: 360px;
+        }
+
+        @media (max-width: 480px) {
+            .modal-box {
+                width: 95%;
+                padding: 18px;
+            }
+        }
+
+        /* IMÁGENES */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 480px) {
+
+            body {
+                align-items: flex-start;
+                padding-top: 20px;
+            }
+
+            .boing {
+                opacity: 0.6;
+                animation-duration: 28s;
+            }
+        }
+
+        body {
+            overflow-y: auto;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="boing-bg">
+        <img src="boing1.png" class="boing" style="top:5%; left:-100px;">
+        <img src="boing2.png" class="boing" style="top:15%; left:-300px;">
+        <img src="boing1.png" class="boing" style="top:30%; left:-500px;">
+        <img src="boing2.png" class="boing" style="top:45%; left:-700px;">
+        <img src="boing1.png" class="boing" style="top:60%; left:-200px;">
+        <img src="boing2.png" class="boing" style="top:75%; left:-400px;">
+        <img src="boing1.png" class="boing" style="top:85%; left:-600px;">
+    </div>
+
+    <div class="app">
+
+        
+
+        <div class="top-buttons">
+            <button class="circle-btn" onclick="abrirHistorial()">📊</button>
+            <button class="circle-btn" onclick="abrirGanancia()">💵</button>
+        </div>
+
+           <img src="Logo.png" class="logo">
+
+            <h3 style="text-align:center;color:#c40000;">Gomiboings CHINITOS</h3>
+
+            <label>No. Venta</label>
+            <input id="venta" disabled>
+
+            <label>Fecha</label>
+            <input id="fecha" disabled>
+
+            <label>Gomiboing</label>
+            <input type="number" id="g" value="0" oninput="calc()">
+
+            <label>Rusa</label>
+            <input type="number" id="r" value="0" oninput="calc()">
+
+            <label>Rusa preparada</label>
+            <input type="number" id="rp" value="0" oninput="calc()">
+
+            <label>Monto recibido</label>
+            <input type="number" id="monto" oninput="calc()">
+
+            <label>Método</label>
+            <select id="metodo">
+                <option>Efectivo</option>
+                <option>Transferencia</option>
+            </select>
+
+            <div class="total">Total: $ <span id="total">0</span></div>
+            <div class="total">Cambio: $ <span id="cambio">0</span></div>
+
+            <button class="cerrar-btn" onclick="guardar()">
+                Registrar venta
+            </button>
+
+            <button class="cerrar-btn" onclick="cerrarVentas()">
+                Cerrar ventas del día
+            </button>
+
+        </div>
+
+ 
+    <!-- MODALES -->
+
+
+    <div id="splash" class="splash"></div>
+
+    <script>
+
+        let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+        let hoy = new Date().toLocaleDateString()
+
+        fecha.value = hoy
+
+        function actualizarVenta() {
+            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+            document.getElementById("venta").value = ventas.length + 1
+        }
+
+        actualizarVenta()
+
+        function calc() {
+
+            let gVal = Number(document.getElementById("g").value) || 0
+            let rVal = Number(document.getElementById("r").value) || 0
+            let rpVal = Number(document.getElementById("rp").value) || 0
+            let mVal = Number(document.getElementById("monto").value) || 0
+
+            let total = (gVal * 25) + (rVal * 35) + (rpVal * 40)
+            let cambio = mVal - total
+
+            document.getElementById("total").innerText = total
+            document.getElementById("cambio").innerText = cambio > 0 ? cambio : 0
+
+        }
+
+        function guardar() {
+
+            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+
+            let total = +document.getElementById("total").innerText
+            let monto = +document.getElementById("monto").value || 0
+
+            if (total === 0) {
+                splash("❌ Agrega productos")
+                return
+            }
+
+            if (monto < total) {
+                splash("❌ Dinero insuficiente")
+                return
+            }
+
+            let venta = {
+                n: ventas.length + 1,
+                fecha: hoy,
+                g: +document.getElementById("g").value || 0,
+                r: +document.getElementById("r").value || 0,
+                rp: +document.getElementById("rp").value || 0,
+                total: total,
+                monto: monto,
+                metodo: document.getElementById("metodo").value,
+                cambio: monto - total,
+                ganancia: total
+            }
+
+            ventas.push(venta)
+            localStorage.setItem("ventas", JSON.stringify(ventas))
+
+            splash("✔ Venta registrada")
+
+            setTimeout(() => {
+                location.reload()
+            }, 800)
+
+            fetch("https://script.google.com/macros/s/AKfycbxccy3NzcO1d-G5OL9qFBinRDmfO3n85bpfFW5DelhxfRpEdZUrfwt8lqlp_xvlUAe9/exec", {
+                method: "POST",
+                body: JSON.stringify(venta)
+            })
+
+        }
+
+        function splash(msg) {
+            let s = document.getElementById("splash")
+            s.innerText = msg
+            s.classList.add("show")
+            s.style.opacity = 1
+
+            setTimeout(() => {
+                s.classList.remove("show")
+                s.style.opacity = 0
+            }, 1000)
+        }
+
+        /* MODALES */
+
+
+
+
+
+
+        function abrirHistorial() {
+
+            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+
+            let lista = document.getElementById("historial")
+            lista.innerHTML = ""
+
+            if (ventas.length === 0) {
+                lista.innerHTML = "No hay ventas registradas"
+            }
+
+            ventas.forEach(v => {
+
+                lista.innerHTML += `
+<div style="margin-bottom:10px;padding:10px;border-bottom:1px solid #eee;">
+<b>Venta #${v.n}</b><br>
+G:${v.g} | R:${v.r} | RP:${v.rp}<br>
+Total: $${v.total}<br>
+Recibido: $${v.monto}<br>
+Cambio: $${v.cambio}<br>
+Pago: ${v.metodo}
+</div>
+`
+
+            })
+
+            document.getElementById("modalHistorial").classList.add("active")
+        }
+
+        function abrirGanancia() {
+
+            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+
+            let total = 0
+            let efectivo = 0
+            let transferencia = 0
+
+            ventas.forEach(v => {
+
+                if (v.fecha === hoy) {
+
+                    total += v.total
+
+                    if (v.metodo === "Efectivo") {
+                        efectivo += v.total
+                    } else {
+                        transferencia += v.total
+                    }
+
+                }
+
+            })
+
+            document.getElementById("ganancia").innerHTML = `
+<div style="text-align:center;">
+<h2>$${total}</h2>
+<p>Efectivo: $${efectivo}</p>
+<p>Transferencia: $${transferencia}</p>
+</div>
+`
+
+            document.getElementById("modalGanancia").classList.add("active")
+        }
+
+        function cerrar() {
+            document.querySelectorAll(".modal").forEach(m => {
+                m.classList.remove("active")
+            })
+        }
+
+        function borrarHistorial() {
+            localStorage.removeItem("ventas")
+            location.reload()
+        }
+
+        function cerrarVentas() {
+
+            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+
+            if (ventas.length === 0) {
+                splash("❌ No hay ventas")
+                return
+            }
+
+            let modal = document.getElementById("modalProceso")
+            let texto = document.getElementById("estadoTexto")
+            let boton = document.getElementById("btnContinuar")
+            let loader = document.getElementById("loader")
+
+            modal.classList.add("active")
+
+            // 🔥 ESTADO 1 (cargando)
+            texto.innerText = "📡 Guardando ventas en la nube..."
+            loader.style.display = "block"
+            boton.style.display = "none"
+
+            // ⏳ SIMULACIÓN DE PROCESO
+            setTimeout(() => {
+
+                // 🔥 ESTADO 2 (terminado)
+                texto.innerText = "✅ Ventas registradas correctamente"
+                loader.style.display = "none"
+                boton.style.display = "flex"
+
+            }, 1500)
+
+        }
+
+        function continuar() {
+
+            localStorage.removeItem("ventas")
+
+            document.getElementById("modalProceso").classList.remove("active")
+
+            location.reload()
+
+        }
+
+    </script>
+
+
+    <!-- HISTORIAL -->
+    <div class="modal" id="modalHistorial">
+        <div class="modal-box">
+
+            <div class="modal-header">
+                <h3>Historial</h3>
+                <button class="close-btn" onclick="cerrar()">✖</button>
+            </div>
+
+            <div id="historial" class="lista"></div>
+
+            <button class="cerrar-btn" onclick="borrarHistorial()" style="background:linear-gradient(135deg,#ff2b2b,#a80000);">
+                Borrar historial
+            </button>
+
+        </div>
+    </div>
+
+    <!-- GANANCIAS -->
+    <div class="modal" id="modalGanancia">
+        <div class="modal-box">
+
+            <div class="modal-header">
+                <h3>Ganancias del día</h3>
+                <button class="close-btn" onclick="cerrar()">✖</button>
+            </div>
+
+            <div id="ganancia" class="lista"></div>
+
+            <button class="cerrar-btn" onclick="borrarHistorial()" style="background:linear-gradient(135deg,#ff2b2b,#a80000);">
+                Borrar datos
+            </button>
+
+
+        </div>
+    </div>
+
+
+    <!-- MODAL PROCESO -->
+    <div id="modalProceso" class="modal">
+        <div class="modal-box" style="text-align:center;">
+
+            <h3 id="estadoTexto">Procesando...</h3>
+
+            <div id="loader" class="loader"></div>
+
+            <button id="btnContinuar"
+                    class="cerrar-btn"
+                    style="display:none;margin-top:20px;"
+                    onclick="continuar()">
+                Continuar
+            </button>
+
+        </div>
+    </div>
+
+</body>
+</html>
