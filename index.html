@@ -14,19 +14,24 @@
 
         body {
             margin: 0;
-            background: linear-gradient(135deg,#d60000,#a80000);
-            display: block; /* 🔥 cambio clave */
-
-            min-height: 100vh;
+            min-height: 100dvh;
             padding: 15px;
-            /* FIX iPhone */
+            background: linear-gradient(135deg,#ff2b2b,#7a0000);
             background-attachment: fixed;
         }
 
-        .app {
-            margin: auto;
-            margin-top: 20px;
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                background: radial-gradient(circle at top, rgba(255,255,255,0.15), transparent);
+                pointer-events: none;
+            }
+
+        html {
+            background: linear-gradient(135deg,#d60000,#a80000);
         }
+
 
         /* BOINGS */
 
@@ -60,7 +65,7 @@
         /* TARJETA */
 
         .app {
-            background: white;
+            background: rgba(255,255,255,0.9);
             width: 100%;
             max-width: 380px;
             padding: 20px;
@@ -69,6 +74,8 @@
             position: relative;
             z-index: 2;
             margin: auto;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         /* 📱 CELULARES */
@@ -104,14 +111,14 @@
         }
 
         .circle-btn {
-            width: 42px;
-            height: 42px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             background: linear-gradient(135deg,#ff2b2b,#a80000);
             color: white;
             border: none;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            font-size: 18px;
             cursor: pointer;
             transition: 0.25s;
         }
@@ -492,6 +499,13 @@
             background: #ff3b3b;
         }
 
+        @media (max-width: 480px) {
+            .boing {
+                animation-duration: 35s;
+                opacity: 0.5;
+            }
+        }
+
     </style>
 </head>
 
@@ -866,14 +880,27 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
                 return
             }
 
+            // 🔥 EDITAR PRECIOS BASE
+            if (window.editandoBase) {
+                preciosBase[window.editandoBase] = precio
+                window.editandoBase = null
+                cerrar()
+                calc()
+                splash("💲 Precio actualizado")
+                return
+            }
+
             let producto = { nombre, precio }
 
-            if (editandoIndex !== null) {
+            let esEdicion = editandoIndex !== null
+
+            if (esEdicion) {
                 productos[editandoIndex] = producto
-                editandoIndex = null
             } else {
                 productos.push(producto)
             }
+
+            editandoIndex = null
 
             localStorage.setItem("productos", JSON.stringify(productos))
 
@@ -881,7 +908,7 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
             renderProductos()
             calc()
 
-            splash("✅ Producto agregado")
+            splash(esEdicion ? "✏️ Producto actualizado" : "✅ Producto agregado")
         }
 
         function editarProducto(i) {
@@ -979,20 +1006,13 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
 
         function cambiarPrecio(i) {
 
-            let nuevo = prompt(
-                "Nuevo precio:",
-                productos[i].precio
-            )
+            document.getElementById("nombreProducto").value = productos[i].nombre
+            document.getElementById("precioProducto").value = productos[i].precio
 
-            if (nuevo) {
-                productos[i].precio = Number(nuevo)
+            editandoIndex = i
 
-                localStorage.setItem("productos", JSON.stringify(productos))
-                renderProductos()
-                calc()
-
-                splash("💲 Precio actualizado")
-            }
+            document.getElementById("tituloProducto").innerText = "Editar producto"
+            document.getElementById("modalProducto").classList.add("active")
         }
 
         function eliminarProducto(i) {
@@ -1030,13 +1050,14 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
                 valor = preciosBase.preparada
             }
 
-            let nuevo = prompt("Nuevo precio de " + nombre, valor)
+            document.getElementById("nombreProducto").value = nombre
+            document.getElementById("precioProducto").value = valor
 
-            if (nuevo) {
-                preciosBase[tipo] = Number(nuevo)
-                calc()
-                splash("💲 Precio actualizado")
-            }
+            window.editandoBase = tipo
+            editandoIndex = null
+
+            document.getElementById("tituloProducto").innerText = "Editar precio base"
+            document.getElementById("modalProducto").classList.add("active")
         }
 
     </script>
