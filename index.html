@@ -96,12 +96,15 @@
 
         /* BOTONES */
 
-        .top-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
+       .top-buttons {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+
+    display: flex;
+    gap: 10px;
+    z-index: 5;
+}
 
         .circle-btn {
             width: 42px;
@@ -130,6 +133,7 @@
             display: block;
             margin: auto;
             width: 110px;
+            margin-top: 60px;
         }
 
         /* CAMPOS */
@@ -500,6 +504,8 @@
             <label>Rusa preparada</label>
             <input type="number" id="rp" value="0" oninput="calc()">
 
+            <div id="productosExtra"></div>
+
             <label>Monto recibido</label>
             <input type="number" id="monto" oninput="calc()">
 
@@ -548,6 +554,10 @@
             let rVal = Number(document.getElementById("r").value) || 0
             let rpVal = Number(document.getElementById("rp").value) || 0
             let mVal = Number(document.getElementById("monto").value) || 0
+            productos.forEach((p, i) => {
+    let val = Number(document.getElementById("extra" + i)?.value) || 0
+    total += val * p.precio
+})
 
             let total = (gVal * 30) + (rVal * 35) + (rpVal * 40)
             let cambio = mVal - total
@@ -710,6 +720,8 @@ Pago: ${v.metodo}
             let texto = document.getElementById("estadoTexto")
             let boton = document.getElementById("btnContinuar")
             let loader = document.getElementById("loader")
+            let productos = JSON.parse(localStorage.getItem("productos")) || []
+            let editandoIndex = null
 
             modal.classList.add("active")
 
@@ -740,6 +752,97 @@ Pago: ${v.metodo}
 
         }
 
+        function abrirProducto() {
+
+    document.getElementById("nombreProducto").value = ""
+    document.getElementById("precioProducto").value = ""
+    document.getElementById("iconoProducto").value = ""
+    document.getElementById("tituloProducto").innerText = "Nuevo producto"
+
+    editandoIndex = null
+
+    document.getElementById("modalProducto").classList.add("active")
+}
+
+
+function guardarProducto() {
+
+    let nombre = document.getElementById("nombreProducto").value
+    let precio = Number(document.getElementById("precioProducto").value)
+    let icono = document.getElementById("iconoProducto").value || "🧃"
+
+    if (!nombre || !precio) {
+        alert("Completa los datos")
+        return
+    }
+
+    let producto = { nombre, precio, icono }
+
+    if (editandoIndex !== null) {
+        productos[editandoIndex] = producto
+        editandoIndex = null
+    } else {
+        productos.push(producto)
+    }
+
+    localStorage.setItem("productos", JSON.stringify(productos))
+
+    cerrar()
+    renderProductos()
+}
+        
+       function editarProducto(i) {
+
+    let p = productos[i]
+
+    document.getElementById("nombreProducto").value = p.nombre
+    document.getElementById("precioProducto").value = p.precio
+    document.getElementById("iconoProducto").value = p.icono
+
+    document.getElementById("tituloProducto").innerText = "Editar producto"
+
+    editandoIndex = i
+
+    document.getElementById("modalProducto").classList.add("active")
+} 
+
+        function eliminarProducto(i) {
+
+    if (!confirm("¿Eliminar producto?")) return
+
+    productos.splice(i, 1)
+
+    localStorage.setItem("productos", JSON.stringify(productos))
+
+    renderProductos()
+}
+
+        function renderProductos() {
+
+    let cont = document.getElementById("productosExtra")
+    cont.innerHTML = ""
+
+    productos.forEach((p, i) => {
+
+        cont.innerHTML += `
+        <div style="margin-top:10px;padding:10px;border-radius:12px;background:#f5f5f5;">
+
+            <label>${p.icono} ${p.nombre} ($${p.precio})</label>
+
+            <input type="number" value="0" id="extra${i}" oninput="calc()">
+
+            <div style="display:flex;gap:5px;margin-top:5px;">
+                <button class="circle-btn" onclick="editarProducto(${i})">✏️</button>
+                <button class="circle-btn" onclick="eliminarProducto(${i})" style="background:#333;">🗑️</button>
+            </div>
+
+        </div>
+        `
+    })
+}
+
+        renderProductos()
+        
     </script>
 
 
@@ -799,5 +902,29 @@ Pago: ${v.metodo}
         </div>
     </div>
 
+<div class="modal" id="modalProducto">
+    <div class="modal-box">
+
+        <div class="modal-header">
+            <h3 id="tituloProducto">Nuevo producto</h3>
+            <button class="close-btn" onclick="cerrar()">✖</button>
+        </div>
+
+        <label>Nombre</label>
+        <input id="nombreProducto">
+
+        <label>Precio</label>
+        <input type="number" id="precioProducto">
+
+        <label>Icono (emoji)</label>
+        <input id="iconoProducto" placeholder="🍹">
+
+        <button class="cerrar-btn" onclick="guardarProducto()">
+            Guardar producto
+        </button>
+
+    </div>
+</div>
+    
 </body>
 </html>
