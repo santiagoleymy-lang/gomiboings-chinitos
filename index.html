@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -96,15 +96,12 @@
 
         /* BOTONES */
 
-       .top-buttons {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-
-    display: flex;
-    gap: 10px;
-    z-index: 5;
-}
+        .top-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
 
         .circle-btn {
             width: 42px;
@@ -133,7 +130,6 @@
             display: block;
             margin: auto;
             width: 110px;
-            margin-top: 60px;
         }
 
         /* CAMPOS */
@@ -460,6 +456,42 @@
             overflow-y: auto;
         }
 
+        .producto-item {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .producto-nombre {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .producto-acciones {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .btn-mini {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            color: white;
+        }
+
+        .btn-editar {
+            background: #007bff;
+        }
+
+        .btn-eliminar {
+            background: #ff3b3b;
+        }
+
     </style>
 </head>
 
@@ -477,58 +509,60 @@
 
     <div class="app">
 
-        
 
-       <div class="top-buttons">
-    <button class="circle-btn" onclick="abrirHistorial()">📊</button>
-    <button class="circle-btn" onclick="abrirGanancia()">💵</button>
-    <button class="circle-btn" onclick="abrirProducto()">➕</button>
-</div>
-
-           <img src="Logo.png" class="logo">
-
-            <h3 style="text-align:center;color:#c40000;">Gomiboings CHINITOS</h3>
-
-            <label>No. Venta</label>
-            <input id="venta" disabled>
-
-            <label>Fecha</label>
-            <input id="fecha" disabled>
-
-            <label>Gomiboing</label>
-            <input type="number" id="g" value="0" oninput="calc()">
-
-            <label>Rusa</label>
-            <input type="number" id="r" value="0" oninput="calc()">
-
-            <label>Rusa preparada</label>
-            <input type="number" id="rp" value="0" oninput="calc()">
-
-            <div id="productosExtra"></div>
-
-            <label>Monto recibido</label>
-            <input type="number" id="monto" oninput="calc()">
-
-            <label>Método</label>
-            <select id="metodo">
-                <option>Efectivo</option>
-                <option>Transferencia</option>
-            </select>
-
-            <div class="total">Total: $ <span id="total">0</span></div>
-            <div class="total">Cambio: $ <span id="cambio">0</span></div>
-
-            <button class="cerrar-btn" onclick="guardar()">
-                Registrar venta
-            </button>
-
-            <button class="cerrar-btn" onclick="cerrarVentas()">
-                Cerrar ventas del día
-            </button>
+        <div class="top-buttons">
+            <button class="circle-btn" onclick="abrirHistorial()">📊</button>
+            <button class="circle-btn" onclick="abrirGanancia()">💵</button>
+            <button class="circle-btn" onclick="abrirProducto()">➕</button>
+            <button class="circle-btn" onclick="toggleEdicion()">✏️</button>
 
         </div>
 
- 
+        <img src="Logo.png" class="logo">
+
+        <h3 style="text-align:center;color:#c40000;">Gomiboings CHINITOS</h3>
+
+        <label>No. Venta</label>
+        <input id="venta" disabled>
+
+        <label>Fecha</label>
+        <input id="fecha" disabled>
+
+        <label>Gomiboing</label>
+        <input type="number" id="g" value="0" oninput="calc()">
+
+        <label>Rusa</label>
+        <input type="number" id="r" value="0" oninput="calc()">
+
+        <label>Rusa preparada</label>
+        <input type="number" id="rp" value="0" oninput="calc()">
+
+        <div id="productosExtra"></div>
+
+        <label>Monto recibido</label>
+        <input type="number" id="monto" oninput="calc()">
+
+        <label>Método</label>
+        <select id="metodo">
+            <option>Efectivo</option>
+            <option>Transferencia</option>
+        </select>
+
+        <div class="total">Total: $ <span id="total">0</span></div>
+        <div class="total">Cambio: $ <span id="cambio">0</span></div>
+
+        <button class="cerrar-btn" onclick="guardar()">
+            Registrar venta
+        </button>
+
+        <button class="cerrar-btn" onclick="cerrarVentas()">
+            Cerrar ventas del día
+        </button>
+
+
+    </div>
+
+
     <!-- MODALES -->
 
 
@@ -536,9 +570,15 @@
 
     <script>
 
+        let preciosBase = {
+            gomiboing: 30,
+            rusa: 35,
+            preparada: 40
+        }
+
         let productos = JSON.parse(localStorage.getItem("productos")) || []
         let editandoIndex = null
-        
+
         let ventas = JSON.parse(localStorage.getItem("ventas")) || []
         let hoy = new Date().toLocaleDateString()
 
@@ -551,33 +591,28 @@
 
         actualizarVenta()
 
-       function calc() {
+        function calc() {
 
-    let gVal = Number(document.getElementById("g").value) || 0
-    let rVal = Number(document.getElementById("r").value) || 0
-    let rpVal = Number(document.getElementById("rp").value) || 0
-    let mVal = Number(document.getElementById("monto").value) || 0
+            let gVal = Number(document.getElementById("g").value) || 0
+            let rVal = Number(document.getElementById("r").value) || 0
+            let rpVal = Number(document.getElementById("rp").value) || 0
+            let mVal = Number(document.getElementById("monto").value) || 0
 
-    let total = (gVal * 30) + (rVal * 35) + (rpVal * 40)
+            let total =
+                (gVal * preciosBase.gomiboing) +
+                (rVal * preciosBase.rusa) +
+                (rpVal * preciosBase.preparada)
 
-    // 🔥 sumar productos dinámicos
-    productos.forEach((p, i) => {
-        let val = Number(document.getElementById("extra" + i)?.value) || 0
-        total += val * p.precio
-    })
+            // productos dinámicos
+            productos.forEach((p, i) => {
+                let val = Number(document.getElementById("extra" + i)?.value) || 0
+                total += val * p.precio
+            })
 
-    let cambio = mVal - total
-
-    document.getElementById("total").innerText = total
-    document.getElementById("cambio").innerText = cambio > 0 ? cambio : 0
-}
-
-            let total = (gVal * 30) + (rVal * 35) + (rpVal * 40)
             let cambio = mVal - total
 
             document.getElementById("total").innerText = total
             document.getElementById("cambio").innerText = cambio > 0 ? cambio : 0
-
         }
 
         function guardar() {
@@ -597,12 +632,27 @@
                 return
             }
 
+            let extrasVenta = []
+
+            productos.forEach((p, i) => {
+                let val = Number(document.getElementById("extra" + i)?.value) || 0
+                if (val > 0) {
+                    extrasVenta.push({
+                        nombre: p.nombre,
+                        cantidad: val
+                    })
+                }
+            })
+
             let venta = {
                 n: ventas.length + 1,
                 fecha: hoy,
                 g: +document.getElementById("g").value || 0,
                 r: +document.getElementById("r").value || 0,
                 rp: +document.getElementById("rp").value || 0,
+
+                extras: extrasVenta,
+
                 total: total,
                 monto: monto,
                 metodo: document.getElementById("metodo").value,
@@ -624,6 +674,7 @@
                 body: JSON.stringify(venta)
             })
 
+            abrirHistorial()
         }
 
         function splash(msg) {
@@ -648,27 +699,58 @@
         function abrirHistorial() {
 
             let ventas = JSON.parse(localStorage.getItem("ventas")) || []
-
             let lista = document.getElementById("historial")
+
             lista.innerHTML = ""
 
             if (ventas.length === 0) {
-                lista.innerHTML = "No hay ventas registradas"
+                lista.innerHTML = "No hay ventas"
+                return
             }
 
             ventas.forEach(v => {
 
+                let extrasHTML = ""
+
+                if (v.extras && v.extras.length > 0) {
+                    v.extras.forEach(e => {
+                        extrasHTML += `<div>${e.nombre} x${e.cantidad}</div>`
+                    })
+                }
+
                 lista.innerHTML += `
-<div style="margin-bottom:10px;padding:10px;border-bottom:1px solid #eee;">
-<b>Venta #${v.n}</b><br>
-G:${v.g} | R:${v.r} | RP:${v.rp}<br>
-Total: $${v.total}<br>
-Recibido: $${v.monto}<br>
-Cambio: $${v.cambio}<br>
-Pago: ${v.metodo}
+<div style="
+background:#fff;
+border-radius:15px;
+padding:15px;
+margin-bottom:15px;
+box-shadow:0 6px 15px rgba(0,0,0,0.15);
+">
+
+        <div style="text-align:center;font-weight:bold;">
+            🧾 Venta #${v.n}
+        </div>
+
+        <div style="margin-top:8px;">
+            Gomiboing: ${v.g}
+        </div>
+        <div>Rusa: ${v.r}</div>
+        <div>Preparada: ${v.rp}</div>
+
+        ${extrasHTML}
+
+        <hr>
+
+        <div><b>Total: $${v.total}</b></div>
+        <div>Recibido: $${v.monto}</div>
+        <div>Cambio: $${v.cambio}</div>
+
+        <div style="font-size:12px;color:#666;margin-top:5px;">
+            ${v.metodo} • ${v.fecha}
+        </div>
+
 </div>
 `
-
             })
 
             document.getElementById("modalHistorial").classList.add("active")
@@ -733,7 +815,7 @@ Pago: ${v.metodo}
             let texto = document.getElementById("estadoTexto")
             let boton = document.getElementById("btnContinuar")
             let loader = document.getElementById("loader")
-            
+
             modal.classList.add("active")
 
             // 🔥 ESTADO 1 (cargando)
@@ -765,95 +847,198 @@ Pago: ${v.metodo}
 
         function abrirProducto() {
 
-    document.getElementById("nombreProducto").value = ""
-    document.getElementById("precioProducto").value = ""
-    document.getElementById("iconoProducto").value = ""
-    document.getElementById("tituloProducto").innerText = "Nuevo producto"
+            document.getElementById("nombreProducto").value = ""
+            document.getElementById("precioProducto").value = ""
+            document.getElementById("tituloProducto").innerText = "Nuevo producto"
 
-    editandoIndex = null
+            editandoIndex = null
 
-    document.getElementById("modalProducto").classList.add("active")
-}
+            document.getElementById("modalProducto").classList.add("active")
+        }
 
+        function guardarProducto() {
 
-function guardarProducto() {
+            let nombre = document.getElementById("nombreProducto").value
+            let precio = Number(document.getElementById("precioProducto").value)
 
-    let nombre = document.getElementById("nombreProducto").value
-    let precio = Number(document.getElementById("precioProducto").value)
-    let icono = document.getElementById("iconoProducto").value || "🧃"
+            if (!nombre || !precio) {
+                splash("❌ Completa los datos")
+                return
+            }
 
-    if (!nombre || !precio) {
-        alert("Completa los datos")
-        return
-    }
+            let producto = { nombre, precio }
 
-    let producto = { nombre, precio, icono }
+            if (editandoIndex !== null) {
+                productos[editandoIndex] = producto
+                editandoIndex = null
+            } else {
+                productos.push(producto)
+            }
 
-    if (editandoIndex !== null) {
-        productos[editandoIndex] = producto
-        editandoIndex = null
-    } else {
-        productos.push(producto)
-    }
+            localStorage.setItem("productos", JSON.stringify(productos))
 
-    localStorage.setItem("productos", JSON.stringify(productos))
+            cerrar()
+            renderProductos()
+            calc()
 
-    cerrar()
-    renderProductos()
-}
-        
-       function editarProducto(i) {
+            splash("✅ Producto agregado")
+        }
 
-    let p = productos[i]
+        function editarProducto(i) {
 
-    document.getElementById("nombreProducto").value = p.nombre
-    document.getElementById("precioProducto").value = p.precio
-    document.getElementById("iconoProducto").value = p.icono
+            let p = productos[i]
 
-    document.getElementById("tituloProducto").innerText = "Editar producto"
+            document.getElementById("nombreProducto").value = p.nombre
+            document.getElementById("precioProducto").value = p.precio
+           
 
-    editandoIndex = i
+            document.getElementById("tituloProducto").innerText = "Editar producto"
 
-    document.getElementById("modalProducto").classList.add("active")
-} 
+            editandoIndex = i
 
-        function eliminarProducto(i) {
-
-    if (!confirm("¿Eliminar producto?")) return
-
-    productos.splice(i, 1)
-
-    localStorage.setItem("productos", JSON.stringify(productos))
-
-    renderProductos()
-}
+            document.getElementById("modalProducto").classList.add("active")
+        }
 
         function renderProductos() {
 
-    let cont = document.getElementById("productosExtra")
-    cont.innerHTML = ""
+            let cont = document.getElementById("productosExtra")
+            cont.innerHTML = ""
 
-    productos.forEach((p, i) => {
+            productos.forEach((p, i) => {
 
-        cont.innerHTML += `
-        <div style="margin-top:10px;padding:10px;border-radius:12px;background:#f5f5f5;">
+                cont.innerHTML += `
+<div style="margin-top:10px;">
+        <label>${p.nombre}</label>
+        <input type="number" value="0" id="extra${i}" oninput="calc()">
+</div>
+`
+            })
+        }
 
-            <label>${p.icono} ${p.nombre} ($${p.precio})</label>
+        renderProductos()
 
-            <input type="number" value="0" id="extra${i}" oninput="calc()">
+        function toggleEdicion() {
 
-            <div style="display:flex;gap:5px;margin-top:5px;">
-                <button class="circle-btn" onclick="editarProducto(${i})">✏️</button>
-                <button class="circle-btn" onclick="eliminarProducto(${i})" style="background:#333;">🗑️</button>
+            let cont = document.getElementById("listaEditarProductos")
+            cont.innerHTML = ""
+
+            // 🔴 PRODUCTOS BASE
+            cont.innerHTML += `
+    <div class="producto-item">
+        <div class="producto-nombre">Gomiboing ($${preciosBase.gomiboing})</div>
+        <div class="producto-acciones">
+            <button class="btn-mini btn-editar" onclick="editarBase('gomiboing')">💲 Precio</button>
+        </div>
+    </div>
+
+    <div class="producto-item">
+        <div class="producto-nombre">Rusa ($${preciosBase.rusa})</div>
+        <div class="producto-acciones">
+            <button class="btn-mini btn-editar" onclick="editarBase('rusa')">💲 Precio</button>
+        </div>
+    </div>
+
+    <div class="producto-item">
+        <div class="producto-nombre">Rusa preparada ($${preciosBase.preparada})</div>
+        <div class="producto-acciones">
+            <button class="btn-mini btn-editar" onclick="editarBase('preparada')">💲 Precio</button>
+        </div>
+    </div>
+    `
+
+            // 🔵 PRODUCTOS EXTRA
+            productos.forEach((p, i) => {
+
+                cont.innerHTML += `
+        <div class="producto-item">
+
+            <div class="producto-nombre">
+                ${p.nombre} ($${p.precio})
+            </div>
+
+            <div class="producto-acciones">
+
+                <button class="btn-mini btn-editar"
+                    onclick="cambiarPrecio(${i})">
+                    💲 Precio
+                </button>
+
+                <button class="btn-mini btn-eliminar"
+                    onclick="eliminarProducto(${i})">
+                    🗑 Eliminar
+                </button>
+
             </div>
 
         </div>
         `
-    })
-}
+            })
 
-        renderProductos()
-        
+            document.getElementById("modalEditarProductos").classList.add("active")
+        }
+
+        function cambiarPrecio(i) {
+
+            let nuevo = prompt(
+                "Nuevo precio:",
+                productos[i].precio
+            )
+
+            if (nuevo) {
+                productos[i].precio = Number(nuevo)
+
+                localStorage.setItem("productos", JSON.stringify(productos))
+                renderProductos()
+                calc()
+
+                splash("💲 Precio actualizado")
+            }
+        }
+
+        function eliminarProducto(i) {
+
+            if (!confirm("¿Eliminar producto?")) return
+
+            productos.splice(i, 1)
+
+            localStorage.setItem("productos", JSON.stringify(productos))
+            renderProductos()
+            calc()
+
+            splash("🗑 Producto eliminado")
+
+            toggleEdicion() // refresca lista
+        }
+
+        function editarBase(tipo) {
+
+            let nombre = ""
+            let valor = 0
+
+            if (tipo === "gomiboing") {
+                nombre = "Gomiboing"
+                valor = preciosBase.gomiboing
+            }
+
+            if (tipo === "rusa") {
+                nombre = "Rusa"
+                valor = preciosBase.rusa
+            }
+
+            if (tipo === "preparada") {
+                nombre = "Rusa preparada"
+                valor = preciosBase.preparada
+            }
+
+            let nuevo = prompt("Nuevo precio de " + nombre, valor)
+
+            if (nuevo) {
+                preciosBase[tipo] = Number(nuevo)
+                calc()
+                splash("💲 Precio actualizado")
+            }
+        }
+
     </script>
 
 
@@ -913,29 +1098,39 @@ function guardarProducto() {
         </div>
     </div>
 
-<div class="modal" id="modalProducto">
-    <div class="modal-box">
+    <div class="modal" id="modalProducto">
+        <div class="modal-box">
 
-        <div class="modal-header">
-            <h3 id="tituloProducto">Nuevo producto</h3>
-            <button class="close-btn" onclick="cerrar()">✖</button>
+            <div class="modal-header">
+                <h3 id="tituloProducto">Nuevo producto</h3>
+                <button class="close-btn" onclick="cerrar()">✖</button>
+            </div>
+
+            <label>Nombre</label>
+            <input id="nombreProducto">
+
+            <label>Precio</label>
+            <input type="number" id="precioProducto">
+
+            <button class="cerrar-btn" onclick="guardarProducto()">
+                Guardar producto
+            </button>
+
         </div>
-
-        <label>Nombre</label>
-        <input id="nombreProducto">
-
-        <label>Precio</label>
-        <input type="number" id="precioProducto">
-
-        <label>Icono (emoji)</label>
-        <input id="iconoProducto" placeholder="🍹">
-
-        <button class="cerrar-btn" onclick="guardarProducto()">
-            Guardar producto
-        </button>
-
     </div>
-</div>
-    
+
+    <div class="modal" id="modalEditarProductos">
+        <div class="modal-box">
+
+            <div class="modal-header">
+                <h3>Editar productos</h3>
+                <button class="close-btn" onclick="cerrar()">✖</button>
+            </div>
+
+            <div id="listaEditarProductos"></div>
+
+        </div>
+    </div>
+
 </body>
 </html>
