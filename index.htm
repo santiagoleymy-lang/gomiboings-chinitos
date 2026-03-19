@@ -536,6 +536,9 @@
 
     <script>
 
+        let productos = JSON.parse(localStorage.getItem("productos")) || []
+        let editandoIndex = null
+        
         let ventas = JSON.parse(localStorage.getItem("ventas")) || []
         let hoy = new Date().toLocaleDateString()
 
@@ -548,16 +551,26 @@
 
         actualizarVenta()
 
-        function calc() {
+       function calc() {
 
-            let gVal = Number(document.getElementById("g").value) || 0
-            let rVal = Number(document.getElementById("r").value) || 0
-            let rpVal = Number(document.getElementById("rp").value) || 0
-            let mVal = Number(document.getElementById("monto").value) || 0
-            productos.forEach((p, i) => {
-    let val = Number(document.getElementById("extra" + i)?.value) || 0
-    total += val * p.precio
-})
+    let gVal = Number(document.getElementById("g").value) || 0
+    let rVal = Number(document.getElementById("r").value) || 0
+    let rpVal = Number(document.getElementById("rp").value) || 0
+    let mVal = Number(document.getElementById("monto").value) || 0
+
+    let total = (gVal * 30) + (rVal * 35) + (rpVal * 40)
+
+    // 🔥 sumar productos dinámicos
+    productos.forEach((p, i) => {
+        let val = Number(document.getElementById("extra" + i)?.value) || 0
+        total += val * p.precio
+    })
+
+    let cambio = mVal - total
+
+    document.getElementById("total").innerText = total
+    document.getElementById("cambio").innerText = cambio > 0 ? cambio : 0
+}
 
             let total = (gVal * 30) + (rVal * 35) + (rpVal * 40)
             let cambio = mVal - total
@@ -720,9 +733,7 @@ Pago: ${v.metodo}
             let texto = document.getElementById("estadoTexto")
             let boton = document.getElementById("btnContinuar")
             let loader = document.getElementById("loader")
-            let productos = JSON.parse(localStorage.getItem("productos")) || []
-            let editandoIndex = null
-
+            
             modal.classList.add("active")
 
             // 🔥 ESTADO 1 (cargando)
