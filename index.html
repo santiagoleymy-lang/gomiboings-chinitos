@@ -17,7 +17,6 @@
             min-height: 100dvh;
             padding: 15px;
             background: linear-gradient(135deg,#ff2b2b,#7a0000);
-            background-attachment: fixed;
         }
 
             body::before {
@@ -75,7 +74,6 @@
             z-index: 2;
             margin: auto;
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.3);
         }
 
         /* 📱 CELULARES */
@@ -582,139 +580,231 @@
 
     <div id="splash" class="splash"></div>
 
-    <script>
+    <script type="module">
+
+        window.editandoBase = null;
+        window.editandoProducto = undefined;
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // 🔥 CONFIG FIREBASE (PON LOS TUYOS)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAitZJnQ-zw8UbsWQ3VJA7Y94bNxivNZuE",
+            authDomain: "gomiboings-chinitos-ec507.firebaseapp.com",
+            databaseURL: "https://gomiboings-chinitos-ec507-default-rtdb.firebaseio.com",
+            projectId: "gomiboings-chinitos-ec507",
+            storageBucket: "gomiboings-chinitos-ec507.firebasestorage.app",
+            messagingSenderId: "71771683056",
+            appId: "1:71771683056:web:dffdd2ac0fb07365c62a35"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // =============================
+        // 🔧 TUS VARIABLES
+        // =============================
 
         let preciosBase = {
             gomiboing: 30,
             rusa: 35,
             preparada: 40
-        }
+        };
 
-        let productos = JSON.parse(localStorage.getItem("productos")) || []
-        let editandoIndex = null
+        let productos = JSON.parse(localStorage.getItem("productos")) || [];
+        let ventas = [];
+        let hoy = new Date().toLocaleDateString();
 
-        let ventas = JSON.parse(localStorage.getItem("ventas")) || []
-        let hoy = new Date().toLocaleDateString()
+        document.getElementById("fecha").value = hoy;
 
-        fecha.value = hoy
+        renderProductos();
 
-        function actualizarVenta() {
-            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
-            document.getElementById("venta").value = ventas.length + 1
-        }
+        // =============================
+        // 🔄 SINCRONIZACIÓN TIEMPO REAL
+        // =============================
 
-        actualizarVenta()
+        onValue(ref(db, "ventas"), (snapshot) => {
+            ventas = [];
 
-        function calc() {
+            snapshot.forEach(child => {
+                ventas.push(child.val());
+            });
 
-            let gVal = Number(document.getElementById("g").value) || 0
-            let rVal = Number(document.getElementById("r").value) || 0
-            let rpVal = Number(document.getElementById("rp").value) || 0
-            let mVal = Number(document.getElementById("monto").value) || 0
+            actualizarVenta(); // 🔥 AGREGA ESTA LÍNEA
+
+        });
+
+        // =============================
+        // 🧮 CALCULAR
+        // =============================
+
+        window.calc = function () {
+
+            let g = +document.getElementById("g").value || 0;
+            let r = +document.getElementById("r").value || 0;
+            let rp = +document.getElementById("rp").value || 0;
+            let m = +document.getElementById("monto").value || 0;
 
             let total =
-                (gVal * preciosBase.gomiboing) +
-                (rVal * preciosBase.rusa) +
-                (rpVal * preciosBase.preparada)
+                (g * preciosBase.gomiboing) +
+                (r * preciosBase.rusa) +
+                (rp * preciosBase.preparada);
 
-            // productos dinámicos
             productos.forEach((p, i) => {
-                let val = Number(document.getElementById("extra" + i)?.value) || 0
-                total += val * p.precio
-            })
+                let val = +document.getElementById("extra" + i)?.value || 0;
+                total += val * p.precio;
+            });
 
-            let cambio = mVal - total
+            let cambio = m - total;
 
-            document.getElementById("total").innerText = total
-            document.getElementById("cambio").innerText = cambio > 0 ? cambio : 0
+            document.getElementById("total").innerText = total;
+            document.getElementById("cambio").innerText = cambio > 0 ? cambio : 0;
+        };
+
+        function renderProductos() {
+
+            let cont = document.getElementById("productosExtra");
+            cont.innerHTML = "";
+
+            productos.forEach((p, i) => {
+                cont.innerHTML += `
+            <label>${p.nombre}</label>
+            <input type="number" id="extra${i}" value="0" oninput="calc()">
+        `;
+            });
+
         }
 
-        function guardar() {
+        // =============================
+        // 💾 GUARDAR VENTA (ANTI FALLOS)
+        // =============================
 
-            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+        window.guardar = function () {
 
-            let total = +document.getElementById("total").innerText
-            let monto = +document.getElementById("monto").value || 0
+            let total = +document.getElementById("total").innerText;
+            let monto = +document.getElementById("monto").value || 0;
 
             if (total === 0) {
-                splash("❌ Agrega productos")
-                return
+                splash("❌ Agrega productos");
+                return;
             }
 
             if (monto < total) {
-                splash("❌ Dinero insuficiente")
-                return
+                splash("❌ Dinero insuficiente");
+                return;
             }
 
-            let extrasVenta = []
+            let extras = [];
 
             productos.forEach((p, i) => {
-                let val = Number(document.getElementById("extra" + i)?.value) || 0
+                let val = +document.getElementById("extra" + i)?.value || 0;
                 if (val > 0) {
-                    extrasVenta.push({
-                        nombre: p.nombre,
-                        cantidad: val
-                    })
+                    extras.push({ nombre: p.nombre, cantidad: val });
                 }
-            })
+            });
+
+            let numeroVenta = ventas.length + 1;
 
             let venta = {
-                n: ventas.length + 1,
-                fecha: hoy,
+                n: numeroVenta,
+                fecha: new Date().toLocaleString(),
                 g: +document.getElementById("g").value || 0,
                 r: +document.getElementById("r").value || 0,
                 rp: +document.getElementById("rp").value || 0,
-
-                extras: extrasVenta,
-
+                extras: extras, // 🔥 ESTA LÍNEA FALTABA
                 total: total,
                 monto: monto,
                 metodo: document.getElementById("metodo").value,
-                cambio: monto - total,
-                ganancia: total
-            }
+                cambio: monto - total
+            };
 
-            ventas.push(venta)
-            localStorage.setItem("ventas", JSON.stringify(ventas))
+            // 🔥 GUARDAR EN FIREBASE
+            push(ref(db, "ventas"), venta)
+                .then(() => {
 
-            splash("✔ Venta registrada")
+                    splash("✅ Venta guardada");
 
-            setTimeout(() => {
-                location.reload()
-            }, 800)
+                    setTimeout(() => {
+                        limpiarFormulario();
+                        actualizarVenta();
+                    }, 100);
 
-            fetch("https://script.google.com/macros/s/AKfycbxccy3NzcO1d-G5OL9qFBinRDmfO3n85bpfFW5DelhxfRpEdZUrfwt8lqlp_xvlUAe9/exec", {
+                })
+
+        };
+
+        function limpiarFormulario() {
+
+            document.getElementById("g").value = 0;
+            document.getElementById("r").value = 0;
+            document.getElementById("rp").value = 0;
+            document.getElementById("monto").value = "";
+
+            productos.forEach((p, i) => {
+                let input = document.getElementById("extra" + i);
+                if (input) input.value = 0;
+            });
+
+            calc(); // 🔥 recalcula todo
+        }
+
+        function enviarAExcel(venta) {
+
+            fetch("https://script.google.com/macros/s/AKfycbzJHSp_tUwyLUw5qpUvqUxf6tLz13jbeagATBNbXGui0OWKJN1p61yhrl4KGxC6hiAJ/exec", {
                 method: "POST",
                 body: JSON.stringify(venta)
             })
+                .then(() => console.log("Excel OK"))
+                .catch(() => console.log("Error Excel"));
 
-            abrirHistorial()
         }
 
-        function splash(msg) {
-            let s = document.getElementById("splash")
-            s.innerText = msg
-            s.classList.add("show")
-            s.style.opacity = 1
 
-            setTimeout(() => {
-                s.classList.remove("show")
-                s.style.opacity = 0
-            }, 1000)
+        // 🔥 NUEVO
+        function enviarTodasAExcel() {
+
+            ventas.forEach(v => {
+                fetch("https://script.google.com/macros/s/AKfycbzJHSp_tUwyLUw5qpUvqUxf6tLz13jbeagATBNbXGui0OWKJN1p61yhrl4KGxC6hiAJ/exec", {
+                    method: "POST",
+                    body: JSON.stringify(v)
+                });
+            });
+
         }
 
-        /* MODALES */
+        // =============================
+        // 🔁 SISTEMA ANTI PÉRDIDA
+        // =============================
 
+        function guardarPendiente(v) {
+            let p = JSON.parse(localStorage.getItem("pendientes")) || [];
+            p.push(v);
+            localStorage.setItem("pendientes", JSON.stringify(p));
+        }
 
+        function reintentarPendientes() {
+            let p = JSON.parse(localStorage.getItem("pendientes")) || [];
 
+            if (p.length === 0) return;
 
+            p.forEach(v => {
+                push(ref(db, "ventas"), v);
+            });
 
+            localStorage.removeItem("pendientes");
+        }
 
-        function abrirHistorial() {
+        // cada 10 segundos
+        setInterval(reintentarPendientes, 10000);
 
-            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+        // =============================
+        // 📊 HISTORIAL
+        // =============================
+
+        window.abrirHistorial = function () {
+
             let lista = document.getElementById("historial")
-
             lista.innerHTML = ""
 
             if (ventas.length === 0) {
@@ -742,7 +832,7 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
 ">
 
         <div style="text-align:center;font-weight:bold;">
-            🧾 Venta #${v.n}
+            🧾 Venta #${v.n || ""}
         </div>
 
         <div style="margin-top:8px;">
@@ -770,9 +860,25 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
             document.getElementById("modalHistorial").classList.add("active")
         }
 
-        function abrirGanancia() {
+        // =============================
+        // 🔔 UI
+        // =============================
 
-            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
+        window.splash = function (msg) {
+            let s = document.getElementById("splash");
+            s.innerText = msg;
+            s.classList.add("show");
+
+            setTimeout(() => {
+                s.classList.remove("show");
+            }, 1000);
+        };
+
+        function actualizarVenta() {
+            document.getElementById("venta").value = ventas.length + 1;
+        }
+
+        window.abrirGanancia = function () {
 
             let total = 0
             let efectivo = 0
@@ -780,7 +886,9 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
 
             ventas.forEach(v => {
 
-                if (v.fecha === hoy) {
+                let fechaVenta = new Date(v.fecha).toLocaleDateString()
+
+                if (fechaVenta === hoy) {
 
                     total += v.total
 
@@ -795,270 +903,260 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
             })
 
             document.getElementById("ganancia").innerHTML = `
-<div style="text-align:center;">
-<h2>$${total}</h2>
-<p>Efectivo: $${efectivo}</p>
-<p>Transferencia: $${transferencia}</p>
-</div>
-`
+        <div style="text-align:center;">
+            <h2>$${total}</h2>
+            <p>Efectivo: $${efectivo}</p>
+            <p>Transferencia: $${transferencia}</p>
+        </div>
+        `
 
             document.getElementById("modalGanancia").classList.add("active")
         }
 
-        function cerrar() {
+        window.borrarHistorial = function () {
+            document.getElementById("modalConfirmar").classList.add("active")
+        }
+
+        window.confirmarBorrado = function () {
+
+            fetch("https://gomiboings-chinitos-ec507-default-rtdb.firebaseio.com/ventas.json", {
+                method: "DELETE"
+            })
+                .then(() => {
+
+                    ventas = [];              // 🔥 limpia memoria
+                    actualizarVenta();        // 🔥 reinicia número
+                    limpiarFormulario();      // 🔥 limpia campos
+
+                    cerrar();                 // 🔥 CIERRA MODAL
+
+                    splash("🗑 Historial eliminado"); // 🔥 mensaje correcto
+                })
+        }
+
+        window.cerrar = function () {
             document.querySelectorAll(".modal").forEach(m => {
-                m.classList.remove("active")
-            })
+                m.classList.remove("active");
+            });
         }
 
-        function borrarHistorial() {
-            localStorage.removeItem("ventas")
-            location.reload()
-        }
+        window.toggleEdicion = function () {
 
-        function cerrarVentas() {
+            let cont = document.getElementById("listaEditarProductos");
+            cont.innerHTML = "";
 
-            let ventas = JSON.parse(localStorage.getItem("ventas")) || []
-
-            if (ventas.length === 0) {
-                splash("❌ No hay ventas")
-                return
-            }
-
-            let modal = document.getElementById("modalProceso")
-            let texto = document.getElementById("estadoTexto")
-            let boton = document.getElementById("btnContinuar")
-            let loader = document.getElementById("loader")
-
-            modal.classList.add("active")
-
-            // 🔥 ESTADO 1 (cargando)
-            texto.innerText = "📡 Guardando ventas en la nube..."
-            loader.style.display = "block"
-            boton.style.display = "none"
-
-            // ⏳ SIMULACIÓN DE PROCESO
-            setTimeout(() => {
-
-                // 🔥 ESTADO 2 (terminado)
-                texto.innerText = "✅ Ventas registradas correctamente"
-                loader.style.display = "none"
-                boton.style.display = "flex"
-
-            }, 1500)
-
-        }
-
-        function continuar() {
-
-            localStorage.removeItem("ventas")
-
-            document.getElementById("modalProceso").classList.remove("active")
-
-            location.reload()
-
-        }
-
-        function abrirProducto() {
-
-            document.getElementById("nombreProducto").value = ""
-            document.getElementById("precioProducto").value = ""
-            document.getElementById("tituloProducto").innerText = "Nuevo producto"
-
-            editandoIndex = null
-
-            document.getElementById("modalProducto").classList.add("active")
-        }
-
-        function guardarProducto() {
-
-            let nombre = document.getElementById("nombreProducto").value
-            let precio = Number(document.getElementById("precioProducto").value)
-
-            if (!nombre || !precio) {
-                splash("❌ Completa los datos")
-                return
-            }
-
-            // 🔥 EDITAR PRECIOS BASE
-            if (window.editandoBase) {
-                preciosBase[window.editandoBase] = precio
-                window.editandoBase = null
-                cerrar()
-                calc()
-                splash("💲 Precio actualizado")
-                return
-            }
-
-            let producto = { nombre, precio }
-
-            let esEdicion = editandoIndex !== null
-
-            if (esEdicion) {
-                productos[editandoIndex] = producto
-            } else {
-                productos.push(producto)
-            }
-
-            editandoIndex = null
-
-            localStorage.setItem("productos", JSON.stringify(productos))
-
-            cerrar()
-            renderProductos()
-            calc()
-
-            splash(esEdicion ? "✏️ Producto actualizado" : "✅ Producto agregado")
-        }
-
-        function editarProducto(i) {
-
-            let p = productos[i]
-
-            document.getElementById("nombreProducto").value = p.nombre
-            document.getElementById("precioProducto").value = p.precio
-           
-
-            document.getElementById("tituloProducto").innerText = "Editar producto"
-
-            editandoIndex = i
-
-            document.getElementById("modalProducto").classList.add("active")
-        }
-
-        function renderProductos() {
-
-            let cont = document.getElementById("productosExtra")
-            cont.innerHTML = ""
-
-            productos.forEach((p, i) => {
-
-                cont.innerHTML += `
-<div style="margin-top:10px;">
-        <label>${p.nombre}</label>
-        <input type="number" value="0" id="extra${i}" oninput="calc()">
-</div>
-`
-            })
-        }
-
-        renderProductos()
-
-        function toggleEdicion() {
-
-            let cont = document.getElementById("listaEditarProductos")
-            cont.innerHTML = ""
-
-            // 🔴 PRODUCTOS BASE
+            // 🔥 BASE
             cont.innerHTML += `
-    <div class="producto-item">
-        <div class="producto-nombre">Gomiboing ($${preciosBase.gomiboing})</div>
-        <div class="producto-acciones">
-            <button class="btn-mini btn-editar" onclick="editarBase('gomiboing')">💲 Precio</button>
-        </div>
-    </div>
-
-    <div class="producto-item">
-        <div class="producto-nombre">Rusa ($${preciosBase.rusa})</div>
-        <div class="producto-acciones">
-            <button class="btn-mini btn-editar" onclick="editarBase('rusa')">💲 Precio</button>
-        </div>
-    </div>
-
-    <div class="producto-item">
-        <div class="producto-nombre">Rusa preparada ($${preciosBase.preparada})</div>
-        <div class="producto-acciones">
-            <button class="btn-mini btn-editar" onclick="editarBase('preparada')">💲 Precio</button>
-        </div>
-    </div>
-    `
-
-            // 🔵 PRODUCTOS EXTRA
-            productos.forEach((p, i) => {
-
-                cont.innerHTML += `
         <div class="producto-item">
-
-            <div class="producto-nombre">
-                ${p.nombre} ($${p.precio})
-            </div>
-
-            <div class="producto-acciones">
-
-                <button class="btn-mini btn-editar"
-                    onclick="cambiarPrecio(${i})">
-                    💲 Precio
-                </button>
-
-                <button class="btn-mini btn-eliminar"
-                    onclick="eliminarProducto(${i})">
-                    🗑 Eliminar
-                </button>
-
-            </div>
-
+            <div class="producto-nombre">Gomiboing ($${preciosBase.gomiboing})</div>
+            <button class="btn-mini btn-editar" onclick="editarBase('gomiboing')">Editar</button>
         </div>
-        `
-            })
 
-            document.getElementById("modalEditarProductos").classList.add("active")
+        <div class="producto-item">
+            <div class="producto-nombre">Rusa ($${preciosBase.rusa})</div>
+            <button class="btn-mini btn-editar" onclick="editarBase('rusa')">Editar</button>
+        </div>
+
+        <div class="producto-item">
+            <div class="producto-nombre">Preparada ($${preciosBase.preparada})</div>
+            <button class="btn-mini btn-editar" onclick="editarBase('preparada')">Editar</button>
+        </div>
+    `;
+
+            // 🔥 PRODUCTOS EXTRA
+            productos.forEach((p, i) => {
+                cont.innerHTML += `
+            <div class="producto-item">
+                <div class="producto-nombre">${p.nombre} ($${p.precio})</div>
+                <div class="producto-acciones">
+                    <button class="btn-mini btn-editar" onclick="editarProducto(${i})">Editar</button>
+                    <button class="btn-mini btn-eliminar" onclick="eliminarProducto(${i})">Eliminar</button>
+                </div>
+            </div>
+        `;
+            });
+
+            document.getElementById("modalEditarProductos").classList.add("active");
         }
 
-        function cambiarPrecio(i) {
+        window.editarProducto = function (i) {
 
-            document.getElementById("nombreProducto").value = productos[i].nombre
-            document.getElementById("precioProducto").value = productos[i].precio
+            let p = productos[i];
 
-            editandoIndex = i
+            document.getElementById("nombreProducto").value = p.nombre;
+            document.getElementById("precioProducto").value = p.precio;
 
-            document.getElementById("tituloProducto").innerText = "Editar producto"
-            document.getElementById("modalProducto").classList.add("active")
+            window.editandoProducto = i;
+            window.editandoBase = null; // 🔥 IMPORTANTE
+
+            cerrar();
+            document.getElementById("modalProducto").classList.add("active");
         }
+        
 
-        function eliminarProducto(i) {
+        window.editarBase = function (tipo) {
 
-            if (!confirm("¿Eliminar producto?")) return
-
-            productos.splice(i, 1)
-
-            localStorage.setItem("productos", JSON.stringify(productos))
-            renderProductos()
-            calc()
-
-            splash("🗑 Producto eliminado")
-
-            toggleEdicion() // refresca lista
-        }
-
-        function editarBase(tipo) {
-
-            let nombre = ""
-            let valor = 0
+            let nombre = "";
+            let valor = 0;
 
             if (tipo === "gomiboing") {
-                nombre = "Gomiboing"
-                valor = preciosBase.gomiboing
+                nombre = "Gomiboing";
+                valor = preciosBase.gomiboing;
             }
 
             if (tipo === "rusa") {
-                nombre = "Rusa"
-                valor = preciosBase.rusa
+                nombre = "Rusa";
+                valor = preciosBase.rusa;
             }
 
             if (tipo === "preparada") {
-                nombre = "Rusa preparada"
-                valor = preciosBase.preparada
+                nombre = "Rusa preparada";
+                valor = preciosBase.preparada;
             }
 
-            document.getElementById("nombreProducto").value = nombre
-            document.getElementById("precioProducto").value = valor
+            document.getElementById("nombreProducto").value = nombre;
+            document.getElementById("precioProducto").value = valor;
 
-            window.editandoBase = tipo
-            editandoIndex = null
+            window.editandoBase = tipo;
+            window.editandoProducto = undefined;
 
-            document.getElementById("tituloProducto").innerText = "Editar precio base"
-            document.getElementById("modalProducto").classList.add("active")
+            cerrar(); // 🔥 ESTA LÍNEA ES LA CLAVE
+
+            document.getElementById("modalProducto").classList.add("active");
         }
+
+        window.guardarProducto = function () {
+
+            let nombre = document.getElementById("nombreProducto").value.trim();
+            let precio = +document.getElementById("precioProducto").value;
+
+            if (!nombre || precio <= 0) {
+                splash("❌ Datos inválidos");
+                return;
+            }
+
+            // 🔥 EDITAR BASE
+            if (window.editandoBase !== null && window.editandoBase !== undefined) {
+
+                preciosBase[window.editandoBase] = precio;
+
+                calc();
+                toggleEdicion();
+
+                setTimeout(() => cerrar(), 100); // 🔥 CLAVE
+
+                splash("💲 Precio actualizado");
+                return;
+            }
+
+            // 🔥 EDITAR PRODUCTO
+            if (window.editandoProducto !== undefined) {
+
+                productos[window.editandoProducto] = { nombre, precio };
+
+                window.editandoProducto = undefined; // 🔥 LIMPIAR
+                window.editandoBase = null;
+
+                localStorage.setItem("productos", JSON.stringify(productos));
+
+                renderProductos();
+                toggleEdicion(); // 🔥 refresca lista
+
+                cerrar();
+                splash("✏️ Producto actualizado");
+                return;
+            }
+
+            // 🔥 NUEVO PRODUCTO
+            productos.push({ nombre, precio });
+
+            localStorage.setItem("productos", JSON.stringify(productos));
+
+            renderProductos();
+
+            cerrar();
+            splash("✅ Producto agregado");
+
+            document.getElementById("nombreProducto").value = "";
+            document.getElementById("precioProducto").value = "";
+
+            console.log("EDITANDO BASE:", window.editandoBase);
+        };
+
+        window.eliminarProducto = function (i) {
+
+            productos.splice(i, 1);
+
+            localStorage.setItem("productos", JSON.stringify(productos));
+
+            renderProductos();
+
+            toggleEdicion(); // 🔥 ESTA LÍNEA FALTABA
+
+            splash("🗑 Producto eliminado");
+        }
+
+        // 🔥 HACER FUNCIONES GLOBALES
+        window.renderProductos = renderProductos;
+        window.actualizarVenta = actualizarVenta;
+        window.reintentarPendientes = reintentarPendientes;
+
+        window.abrirProducto = function () {
+
+            document.getElementById("nombreProducto").value = "";
+            document.getElementById("precioProducto").value = "";
+
+            window.editandoProducto = undefined;
+            window.editandoBase = null;
+
+            document.getElementById("modalProducto").classList.add("active");
+        }
+
+        // 🔥 AQUÍ VA
+        window.continuar = function () {
+            cerrar();
+        }
+
+
+        window.cerrarVentas = function () {
+
+            if (ventas.length === 0) {
+                splash("❌ No hay ventas");
+                return;
+            }
+
+            let modal = document.getElementById("modalProceso");
+            let texto = document.getElementById("estadoTexto");
+            let boton = document.getElementById("btnContinuar");
+            let loader = document.getElementById("loader");
+
+            modal.classList.add("active");
+
+            texto.innerText = "📡 Enviando ventas a Excel...";
+            loader.style.display = "block";
+            boton.style.display = "none";
+
+            setTimeout(() => {
+
+                // 🔥 1. ENVIAR A EXCEL
+                enviarTodasAExcel();
+
+                // 🔥 2. BORRAR FIREBASE
+                fetch("https://gomiboings-chinitos-ec507-default-rtdb.firebaseio.com/ventas.json", {
+                    method: "DELETE"
+                });
+
+                // 🔥 3. LIMPIAR TODO
+                ventas = [];
+                actualizarVenta();
+                limpiarFormulario();
+
+                texto.innerText = "✅ Día cerrado correctamente";
+                loader.style.display = "none";
+                boton.style.display = "flex";
+
+            }, 1500);
+        };
 
     </script>
 
@@ -1150,6 +1248,21 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
 
             <div id="listaEditarProductos"></div>
 
+        </div>
+    </div>
+
+    <div class="modal" id="modalConfirmar">
+        <div class="modal-box" style="text-align:center;">
+            <h3>¿Borrar historial?</h3>
+            <p style="font-size:13px;color:#666;">Esta acción no se puede deshacer</p>
+
+            <button class="cerrar-btn" onclick="confirmarBorrado()">
+                Sí, borrar
+            </button>
+
+            <button class="cerrar-btn" onclick="cerrar()" style="background:#aaa;">
+                Cancelar
+            </button>
         </div>
     </div>
 
