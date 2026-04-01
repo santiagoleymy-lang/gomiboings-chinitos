@@ -1161,7 +1161,7 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
         }
 
 
-        window.cerrarVentas = function () {
+        window.cerrarVentas = async function () {
 
             if (ventas.length === 0) {
                 splash("❌ No hay ventas");
@@ -1179,17 +1179,14 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
             loader.style.display = "block";
             boton.style.display = "none";
 
-            setTimeout(() => {
-
+            try {
 
                 await enviarTodasAExcel();
 
-                // 🔥 2. BORRAR FIREBASE
-                fetch("https://gomiboings-chinitos-ec507-default-rtdb.firebaseio.com/ventas.json", {
+                await fetch("https://gomiboings-chinitos-ec507-default-rtdb.firebaseio.com/ventas.json", {
                     method: "DELETE"
                 });
 
-                // 🔥 3. LIMPIAR TODO
                 ventas = [];
                 actualizarVenta();
                 limpiarFormulario();
@@ -1198,7 +1195,14 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
                 loader.style.display = "none";
                 boton.style.display = "flex";
 
-            }, 1500);
+            } catch (e) {
+
+                texto.innerText = "❌ Error al enviar ventas";
+                loader.style.display = "none";
+                boton.style.display = "flex";
+
+            }
+
         };
 
     </script>
