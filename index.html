@@ -503,7 +503,6 @@
                 opacity: 0.5;
             }
         }
-
     </style>
 </head>
 
@@ -631,7 +630,8 @@
                 ventas.push(child.val());
             });
 
-            actualizarVenta(); // 🔥 AGREGA ESTA LÍNEA
+            actualizarVenta();
+            actualizarGanancias(); 
 
         });
 
@@ -761,15 +761,20 @@
         }
 
 
-        // 🔥 NUEVO
-        function enviarTodasAExcel() {
+        async function enviarTodasAExcel() {
 
-            ventas.forEach(v => {
-                fetch("https://script.google.com/macros/s/AKfycbzJHSp_tUwyLUw5qpUvqUxf6tLz13jbeagATBNbXGui0OWKJN1p61yhrl4KGxC6hiAJ/exec", {
+            for (let i = 0; i < ventas.length; i++) {
+
+                let venta = ventas[i];
+
+                await fetch("TU_URL_DE_GOOGLE_SCRIPT", {
                     method: "POST",
-                    body: JSON.stringify(v)
+                    body: JSON.stringify(venta)
                 });
-            });
+
+                await new Promise(r => setTimeout(r, 200));
+
+            }
 
         }
 
@@ -876,6 +881,44 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
 
         function actualizarVenta() {
             document.getElementById("venta").value = ventas.length + 1;
+        }
+
+        function actualizarGanancias() {
+
+            let total = 0;
+            let efectivo = 0;
+            let transferencia = 0;
+
+            ventas.forEach(v => {
+
+                let fechaVenta = new Date(v.fecha).toLocaleDateString();
+
+                if (fechaVenta === hoy) {
+
+                    total += v.total;
+
+                    if (v.metodo === "Efectivo") {
+                        efectivo += v.total;
+                    } else {
+                        transferencia += v.total;
+                    }
+
+                }
+
+            });
+
+            let div = document.getElementById("ganancia");
+
+            if (div) {
+                div.innerHTML = `
+            <div style="text-align:center;">
+                <h2>$${total}</h2>
+                <p>Efectivo: $${efectivo}</p>
+                <p>Transferencia: $${transferencia}</p>
+            </div>
+        `;
+            }
+
         }
 
         window.abrirGanancia = function () {
@@ -992,7 +1035,7 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
             cerrar();
             document.getElementById("modalProducto").classList.add("active");
         }
-        
+
 
         window.editarBase = function (tipo) {
 
