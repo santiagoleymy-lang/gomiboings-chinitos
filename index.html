@@ -613,7 +613,7 @@
 
         let productos = JSON.parse(localStorage.getItem("productos")) || [];
         let ventas = [];
-        let hoy = new Date().toLocaleDateString();
+        let hoy = new Date().toLocaleString().split(",")[0];
 
         document.getElementById("fecha").value = hoy;
 
@@ -767,12 +767,12 @@
 
                 let venta = ventas[i];
 
-                await fetch("TU_URL_DE_GOOGLE_SCRIPT", {
+                await fetch("https://script.google.com/macros/s/AKfycbzJHSp_tUwyLUw5qpUvqUxf6tLz13jbeagATBNbXGui0OWKJN1p61yhrl4KGxC6hiAJ/exec", {
                     method: "POST",
                     body: JSON.stringify(venta)
                 });
 
-                await new Promise(r => setTimeout(r, 200));
+                await new Promise(r => setTimeout(r, 300));
 
             }
 
@@ -891,7 +891,7 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
 
             ventas.forEach(v => {
 
-                let fechaVenta = new Date(v.fecha).toLocaleDateString();
+                let fechaVenta = v.fecha.split(",")[0];
 
                 if (fechaVenta === hoy) {
 
@@ -1181,8 +1181,8 @@ box-shadow:0 6px 15px rgba(0,0,0,0.15);
 
             setTimeout(() => {
 
-                // 🔥 1. ENVIAR A EXCEL
-                enviarTodasAExcel();
+
+                await enviarTodasAExcel();
 
                 // 🔥 2. BORRAR FIREBASE
                 fetch("https://gomiboings-chinitos-ec507-default-rtdb.firebaseio.com/ventas.json", {
